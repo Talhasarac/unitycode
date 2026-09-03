@@ -15,7 +15,7 @@ The harness does not copy itself into your Unity project. The launcher points Op
 ## Install from this repository
 
 ```bash
-git clone git@github.com:Noongits/unity-opencode-harness.git
+git clone git@github.com:Talhasarac/unitycode.git
 cd unity-opencode-harness
 npm install
 mkdir -p ~/.local/bin
