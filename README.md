@@ -16,18 +16,29 @@ Prompts, selected project context, Unity tool output, and screenshots may be sen
 
 ## Requirements
 
+- `curl`, Git, and Node.js 18 or newer with npm
 - OpenCode 1.18.4 or newer
 - Unity 6 (older supported editors may work)
 - [MCP for Unity](https://github.com/CoplayDev/unity-mcp) installed in the project
 - A running MCP for Unity HTTP server (the launcher discovers its project-local PID file)
 - An available multimodal, tool-capable model configured in OpenCode. The harness does not pin a model that may later disappear.
 
-## Install from this repository
+## Install
+
+After this repository is public, install or update UnityCode without needing a custom domain:
 
 ```bash
-git clone git@github.com:Talhasarac/unitycode.git
-cd unity-opencode-harness
-npm install
+curl -fsSL https://raw.githubusercontent.com/Talhasarac/unitycode/main/install.sh | bash
+```
+
+The installer clones the repository into `~/.local/share/unitycode`, installs its pinned npm dependencies, and links `unitycode` into `~/.local/bin`. Review [install.sh](install.sh) before piping it to a shell if you prefer to inspect remote scripts first.
+
+To install manually instead:
+
+```bash
+git clone https://github.com/Talhasarac/unitycode.git ~/.local/share/unitycode
+cd ~/.local/share/unitycode
+npm ci --omit=dev --ignore-scripts
 mkdir -p ~/.local/bin
 ln -sfn "$PWD/bin/UnityCode" ~/.local/bin/unitycode
 ```
@@ -56,19 +67,19 @@ chmod 600 ~/.config/unity-opencode-harness/deepinfra.key
 After installation, simply type:
 
 ```bash
-UnityCode
+unitycode
 ```
 
 It detects the Unity project currently open on the machine and launches the branded TUI. You can also provide a project explicitly:
 
 ```bash
-UnityCode /path/to/UnityProject
+unitycode /path/to/UnityProject
 ```
 
 Run a one-shot task:
 
 ```bash
-UnityCode /path/to/UnityProject run \
+unitycode /path/to/UnityProject run \
   "Inspect the current scene, improve the HUD with UI Toolkit, and verify it with screenshots."
 ```
 
@@ -85,7 +96,7 @@ The default `unity` agent keeps web access but hides the large specialist tool g
 For a one-shot full-capability run from the terminal:
 
 ```bash
-UnityCode /path/to/UnityProject --agent unity-full run "Profile and optimize the current scene"
+unitycode /path/to/UnityProject --agent unity-full run "Profile and optimize the current scene"
 ```
 
 ## Unity CLI helper
@@ -132,7 +143,7 @@ If it is still available, you can select the tested free Muse 1.3 model explicit
 
 ```bash
 export UNITY_OPENCODE_MODEL='opencode/muse-spark-1.3-contributor-free'
-UnityCode /path/to/UnityProject
+unitycode /path/to/UnityProject
 ```
 
 The model must support both tool calling and images if you want screenshot inspection to work. In the included live smoke test, Qwen 3.5 397B correctly grounded the Unity screenshot; Kimi K2.7 Code called Unity tools successfully but misread the same image, so it remains an opt-in coding-oriented alternative.
@@ -141,7 +152,7 @@ Muse Spark 1.3 also passed a live prefab workflow after the operating prompt was
 
 ## Branding
 
-`tui.json` loads `plugins/unitycode-logo.tsx`, which replaces OpenCode's home-screen logo through its `home_logo` TUI slot. The launcher also sets the terminal-window title to `UnityCode — <project>`.
+`tui.json` loads `plugins/unitycode-logo.tsx`, which replaces OpenCode's home-screen logo through its `home_logo` TUI slot. A live bottom-left indicator shows how many UnityCode terminals are open for the same project and how many are active or waiting for input. Crashed terminals disappear after their presence lease expires. The launcher also sets the terminal-window title to `UnityCode — <project>`.
 
 ## Validate the harness
 

@@ -1,4 +1,6 @@
 {
+  "name": "unitycode",
+  "private": true,
   "dependencies": {
     "@opencode-ai/plugin": "1.18.4"
   }
