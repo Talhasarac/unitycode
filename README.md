@@ -2,7 +2,17 @@
 
 A portable OpenCode configuration for serious Unity work: MCP-first editor control, safe Unity CLI fallbacks, screenshot-driven visual verification, and production-minded UI Toolkit guidance.
 
+![UnityCode terminal interface](docs/images/unitycode-tui.png)
+
 The harness does not copy itself into your Unity project. The launcher points OpenCode at this configuration with `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR`, so one installation can serve many projects.
+
+## Safety
+
+UnityCode is designed to make changes inside the Unity project you select. Its bundled policy allows OpenCode file edits and Unity MCP operations, while arbitrary shell commands and access outside the project require confirmation. Use it only with projects you trust and keep your work under version control.
+
+Session sharing is disabled in the bundled configuration. Credentials are loaded only from environment variables or a private key file outside the repository; `.env` and `*.key` files are ignored by Git. Never commit credentials, and review changes before pushing them.
+
+Prompts, selected project context, Unity tool output, and screenshots may be sent to whichever model provider you configure. Use a provider you trust—or a compatible local model—and do not run the harness against sensitive projects without reviewing that provider's data policy.
 
 ## Requirements
 

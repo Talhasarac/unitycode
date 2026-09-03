@@ -4,7 +4,7 @@ Tested on 2026-09-04 against:
 
 - OpenCode 1.18.4 initially; OpenCode auto-updated to 1.18.27 during final TUI verification
 - Unity 6000.3.12f1
-- Project `/Users/talha/Documents/GitHub/GI_TEST`
+- Project `/path/to/UnityProject`
 - MCP for Unity package from `com.coplaydev.unity-mcp`
 - MCP Streamable HTTP endpoint `http://127.0.0.1:8080/mcp`
 
