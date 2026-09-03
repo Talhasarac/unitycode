@@ -41,25 +41,31 @@ if [[ -z "${UNITY_MCP_URL:-}" ]]; then
   export UNITY_MCP_URL
 fi
 
-UNITY_OPENCODE_MODEL="${UNITY_OPENCODE_MODEL:-opencode/muse-spark-1.3-contributor-free}"
-export UNITY_OPENCODE_MODEL
 export OPENCODE_CONFIG="$HARNESS_ROOT/opencode.jsonc"
 export OPENCODE_CONFIG_DIR="$HARNESS_ROOT"
 export OPENCODE_TUI_CONFIG="$HARNESS_ROOT/tui.json"
 
 cd "$PROJECT_PATH"
-if [[ $# -eq 0 ]]; then
-  exec opencode --agent unity "$PROJECT_PATH"
-fi
-
 USE_DEFAULT_AGENT=true
+USE_DEFAULT_MODEL=true
 for ARG in "$@"; do
   if [[ "$ARG" == "--agent" || "$ARG" == --agent=* ]]; then
     USE_DEFAULT_AGENT=false
-    break
+  fi
+  if [[ "$ARG" == "--model" || "$ARG" == --model=* || "$ARG" == "-m" ]]; then
+    USE_DEFAULT_MODEL=false
   fi
 done
+
+DEFAULT_ARGS=()
 if [[ "$USE_DEFAULT_AGENT" == true ]]; then
-  exec opencode --agent unity "$@"
+  DEFAULT_ARGS+=(--agent unity)
 fi
-exec opencode "$@"
+if [[ "$USE_DEFAULT_MODEL" == true && -n "${UNITY_OPENCODE_MODEL:-}" ]]; then
+  DEFAULT_ARGS+=(--model "$UNITY_OPENCODE_MODEL")
+fi
+
+if [[ $# -eq 0 ]]; then
+  exec opencode "${DEFAULT_ARGS[@]}" "$PROJECT_PATH"
+fi
+exec opencode "${DEFAULT_ARGS[@]}" "$@"

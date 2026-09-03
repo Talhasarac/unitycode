@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "{env:UNITY_OPENCODE_MODEL}",
   "provider": {
     "deepinfra": {
       "npm": "@ai-sdk/openai-compatible",
@@ -56,4 +55,3 @@
     }
   }
 }
-

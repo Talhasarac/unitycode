@@ -47,7 +47,7 @@ An exact outgoing-request capture measured the lean agent before and after the p
 
 ## Model finding
 
-`moonshotai/Kimi-K2.7-Code` successfully used Unity MCP tools but twice gave incorrect visual grounding for the saved PNG. `Qwen/Qwen3.5-397B-A17B` correctly identified the foreground red cube, rear-left blue cube, and white platform, while also using Unity MCP resources. Qwen remains the preferred DeepInfra option, while the harness defaults to the separately verified Muse model so it can start and run without requiring a provider key.
+`moonshotai/Kimi-K2.7-Code` successfully used Unity MCP tools but twice gave incorrect visual grounding for the saved PNG. `Qwen/Qwen3.5-397B-A17B` correctly identified the foreground red cube, rear-left blue cube, and white platform, while also using Unity MCP resources. Qwen remains the preferred DeepInfra option. The harness no longer pins Muse—or any other model—so removal of a provider model cannot prevent startup; OpenCode selects its available default unless the user supplies an explicit override.
 
 ## Deliberately not tested
 

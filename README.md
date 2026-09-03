@@ -10,7 +10,7 @@ The harness does not copy itself into your Unity project. The launcher points Op
 - Unity 6 (older supported editors may work)
 - [MCP for Unity](https://github.com/CoplayDev/unity-mcp) installed in the project
 - A running MCP for Unity HTTP server (the launcher discovers its project-local PID file)
-- A multimodal, tool-capable model. The tested default is the keyless `opencode/muse-spark-1.3-contributor-free` model.
+- An available multimodal, tool-capable model configured in OpenCode. The harness does not pin a model that may later disappear.
 
 ## Install from this repository
 
@@ -22,11 +22,11 @@ mkdir -p ~/.local/bin
 ln -sfn "$PWD/bin/UnityCode" ~/.local/bin/unitycode
 ```
 
-Ensure `~/.local/bin` is on `PATH`, then run `unitycode` while Unity and MCP for Unity are running. The default model does not require an API key.
+Ensure `~/.local/bin` is on `PATH`, then run `unitycode` while Unity and MCP for Unity are running. UnityCode itself does not require a DeepInfra key.
 
 ## Optional DeepInfra setup
 
-No API key is required for the default Muse model. To use one of the DeepInfra models instead, never put the token in `opencode.jsonc` or a Unity asset. Use either:
+No DeepInfra key is required to start UnityCode. To use one of the included DeepInfra models, never put the token in `opencode.jsonc` or a Unity asset. Use either:
 
 ```bash
 export DEEPINFRA_API_KEY='your-token'
@@ -106,7 +106,7 @@ While the Editor is open, use MCP `run_tests`, `get_test_job`, `read_console`, a
 
 The installed OpenCode 1.x line uses the top-level `mcp` map represented in `opencode.jsonc`. The Unity endpoint must include `/mcp`, for example `http://127.0.0.1:8080/mcp`. The launcher exports this as `UNITY_MCP_URL`.
 
-To use the tested DeepInfra Qwen model:
+By default, UnityCode lets OpenCode select its currently configured default model. To use the tested DeepInfra Qwen model explicitly:
 
 ```bash
 export UNITY_OPENCODE_MODEL='deepinfra/Qwen/Qwen3.5-397B-A17B'
@@ -118,7 +118,7 @@ To use another model:
 export UNITY_OPENCODE_MODEL='deepinfra/moonshotai/Kimi-K2.7-Code'
 ```
 
-The default is the tested free Muse 1.3 model; you can also select it explicitly:
+If it is still available, you can select the tested free Muse 1.3 model explicitly:
 
 ```bash
 export UNITY_OPENCODE_MODEL='opencode/muse-spark-1.3-contributor-free'
