@@ -22,8 +22,7 @@ bash -n "$ROOT/bin/unity-cli"
 bash -n "$ROOT/scripts/doctor.sh"
 
 UNITY_MCP_URL="${UNITY_MCP_URL:-http://127.0.0.1:8080/mcp}" \
-UNITY_OPENCODE_MODEL="${UNITY_OPENCODE_MODEL:-deepinfra/Qwen/Qwen3.5-397B-A17B}" \
-DEEPINFRA_API_KEY="${DEEPINFRA_API_KEY:-validation-placeholder}" \
+UNITY_OPENCODE_MODEL="${UNITY_OPENCODE_MODEL:-opencode/muse-spark-1.3-contributor-free}" \
 OPENCODE_CONFIG="$ROOT/opencode.jsonc" \
 OPENCODE_CONFIG_DIR="$ROOT" \
 opencode debug config >/dev/null
