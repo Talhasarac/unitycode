@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HARNESS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_PATH="${1:-$PWD}"
+if [[ $# -gt 0 ]]; then shift; fi
+PROJECT_PATH="$(cd "$PROJECT_PATH" 2>/dev/null && pwd)" || {
+  echo "Project directory does not exist: $PROJECT_PATH" >&2
+  exit 2
+}
+
+if [[ ! -d "$PROJECT_PATH/Assets" || ! -d "$PROJECT_PATH/Packages" || ! -d "$PROJECT_PATH/ProjectSettings" ]]; then
+  echo "Not a Unity project: $PROJECT_PATH" >&2
+  exit 2
+fi
+
+if ! command -v opencode >/dev/null 2>&1; then
+  echo "OpenCode is not installed or is not on PATH." >&2
+  exit 3
+fi
+
+KEY_FILE="${UNITY_OPENCODE_KEY_FILE:-$HOME/.config/unity-opencode-harness/deepinfra.key}"
+if [[ -z "${DEEPINFRA_API_KEY:-}" && -f "$KEY_FILE" ]]; then
+  DEEPINFRA_API_KEY="$(tr -d '\r\n' < "$KEY_FILE")"
+  export DEEPINFRA_API_KEY
+fi
+if [[ -z "${DEEPINFRA_API_KEY:-}" ]]; then
+  echo "Set DEEPINFRA_API_KEY or create $KEY_FILE with mode 600." >&2
+  exit 4
+fi
+
+if [[ -z "${UNITY_MCP_URL:-}" ]]; then
+  PORT=""
+  for PID_FILE in "$PROJECT_PATH"/Library/MCPForUnity/RunState/mcp_http_*.pid; do
+    [[ -f "$PID_FILE" ]] || continue
+    CANDIDATE="${PID_FILE##*_}"
+    CANDIDATE="${CANDIDATE%.pid}"
+    if [[ "$CANDIDATE" =~ ^[0-9]+$ ]]; then
+      PORT="$CANDIDATE"
+      break
+    fi
+  done
+  PORT="${PORT:-8080}"
+  UNITY_MCP_URL="http://127.0.0.1:${PORT}/mcp"
+  export UNITY_MCP_URL
+fi
+
+UNITY_OPENCODE_MODEL="${UNITY_OPENCODE_MODEL:-deepinfra/Qwen/Qwen3.5-397B-A17B}"
+export UNITY_OPENCODE_MODEL
+export OPENCODE_CONFIG="$HARNESS_ROOT/opencode.jsonc"
+export OPENCODE_CONFIG_DIR="$HARNESS_ROOT"
+export OPENCODE_TUI_CONFIG="$HARNESS_ROOT/tui.json"
+
+cd "$PROJECT_PATH"
+if [[ $# -eq 0 ]]; then
+  exec opencode --agent unity "$PROJECT_PATH"
+fi
+
+USE_DEFAULT_AGENT=true
+for ARG in "$@"; do
+  if [[ "$ARG" == "--agent" || "$ARG" == --agent=* ]]; then
+    USE_DEFAULT_AGENT=false
+    break
+  fi
+done
+if [[ "$USE_DEFAULT_AGENT" == true ]]; then
+  exec opencode --agent unity "$@"
+fi
+exec opencode "$@"

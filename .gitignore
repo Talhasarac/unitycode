@@ -1,0 +1,6 @@
+.DS_Store
+.env
+*.key
+.unity-opencode/
+node_modules/
+bun.lock

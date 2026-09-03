@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_PATH="${1:-}"
+ACTION="${2:-status}"
+if [[ -z "$PROJECT_PATH" ]]; then
+  echo "Usage: unity-cli PROJECT {status|version|compile|tests [EditMode|PlayMode]|execute METHOD}" >&2
+  exit 2
+fi
+PROJECT_PATH="$(cd "$PROJECT_PATH" 2>/dev/null && pwd)" || {
+  echo "Project directory does not exist: $PROJECT_PATH" >&2
+  exit 2
+}
+if [[ ! -f "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt" ]]; then
+  echo "Not a Unity project: $PROJECT_PATH" >&2
+  exit 2
+fi
+
+UNITY_VERSION="$(awk '/m_EditorVersion:/ {print $2; exit}' "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt")"
+UNITY_BIN="${UNITY_EDITOR_PATH:-/Applications/Unity/Hub/Editor/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity}"
+RUN_DIR="$PROJECT_PATH/.unity-opencode"
+
+is_open() {
+  ps ax -o command= | grep -F '/Unity.app/Contents/MacOS/Unity' | grep -F -- "$PROJECT_PATH" | grep -v -E 'AssetImportWorker|grep -F' >/dev/null 2>&1
+}
+
+require_closed() {
+  if is_open; then
+    echo "Refusing Unity batch mode: this project is already open. Use Unity MCP for live-editor work." >&2
+    exit 5
+  fi
+}
+
+run_unity() {
+  if [[ ! -x "$UNITY_BIN" ]]; then
+    echo "Unity executable not found: $UNITY_BIN" >&2
+    exit 3
+  fi
+  mkdir -p "$RUN_DIR"
+  "$UNITY_BIN" -batchmode -nographics -quit -projectPath "$PROJECT_PATH" "$@"
+}
+
+case "$ACTION" in
+  status)
+    printf 'project=%s\nunity_version=%s\nunity_executable=%s\neditor_open=%s\n' \
+      "$PROJECT_PATH" "$UNITY_VERSION" "$UNITY_BIN" "$(is_open && echo yes || echo no)"
+    ;;
+  version)
+    echo "$UNITY_VERSION"
+    ;;
+  compile)
+    require_closed
+    run_unity -logFile "$RUN_DIR/compile.log"
+    ;;
+  tests)
+    require_closed
+    MODE="${3:-EditMode}"
+    if [[ "$MODE" != "EditMode" && "$MODE" != "PlayMode" ]]; then
+      echo "Test mode must be EditMode or PlayMode." >&2
+      exit 2
+    fi
+    mkdir -p "$RUN_DIR"
+    run_unity -runTests -testPlatform "$MODE" \
+      -testResults "$RUN_DIR/TestResults-$MODE.xml" \
+      -logFile "$RUN_DIR/tests-$MODE.log"
+    ;;
+  execute)
+    require_closed
+    METHOD="${3:-}"
+    if [[ -z "$METHOD" ]]; then
+      echo "execute requires a fully qualified static method." >&2
+      exit 2
+    fi
+    run_unity -executeMethod "$METHOD" -logFile "$RUN_DIR/execute.log" "${@:4}"
+    ;;
+  *)
+    echo "Unknown action: $ACTION" >&2
+    exit 2
+    ;;
+esac

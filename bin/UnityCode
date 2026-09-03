@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE_PATH" ]]; do
+  SOURCE_DIR="$(cd "$(dirname "$SOURCE_PATH")" && pwd)"
+  SOURCE_PATH="$(readlink "$SOURCE_PATH")"
+  [[ "$SOURCE_PATH" = /* ]] || SOURCE_PATH="$SOURCE_DIR/$SOURCE_PATH"
+done
+HARNESS_ROOT="$(cd "$(dirname "$SOURCE_PATH")/.." && pwd)"
+
+logo() {
+  printf '\033[1;36m%s\033[0m\n' \
+    '█ █ █▄ █ █ ▀█▀ █ █ █▀▀ █▀█ █▀▄ █▀▀' \
+    '█▄█ █ ▀█ █  █  ▀▄▀ █▄▄ █▄█ █▄▀ ██▄'
+  printf '\033[2m%s\033[0m\n' 'unitycode · Unity + OpenCode'
+}
+
+usage() {
+  logo
+  printf '\nUsage:\n'
+  printf '  UnityCode                         Detect and open the running Unity project\n'
+  printf '  UnityCode /path/to/UnityProject   Open a specific Unity project\n'
+  printf '  UnityCode run "task"              Run a task against the detected project\n'
+  printf '  UnityCode /path/to/project run "task"\n\n'
+  printf 'Environment overrides: UNITYCODE_PROJECT, UNITY_MCP_URL, UNITY_OPENCODE_MODEL\n'
+}
+
+is_unity_project() {
+  [[ -d "$1/Assets" && -d "$1/Packages" && -d "$1/ProjectSettings" ]]
+}
+
+detect_open_project() {
+  local line candidate
+  while IFS= read -r line; do
+    [[ "$line" == *'/Unity.app/Contents/MacOS/Unity'* ]] || continue
+    [[ "$line" == *'AssetImportWorker'* ]] && continue
+    candidate="$(sed -E 's/.*-[Pp]roject[Pp]ath[= ]+([^ ]+).*/\1/' <<<"$line")"
+    if [[ "$candidate" != "$line" ]] && is_unity_project "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done < <(ps ax -o command=)
+  return 1
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  usage
+  exit 0
+fi
+
+PROJECT_PATH=""
+if [[ -n "${1:-}" ]] && [[ -d "${1:-}" ]] && is_unity_project "${1:-}"; then
+  PROJECT_PATH="$(cd "$1" && pwd)"
+  shift
+elif [[ -n "${UNITYCODE_PROJECT:-}" ]] && is_unity_project "$UNITYCODE_PROJECT"; then
+  PROJECT_PATH="$(cd "$UNITYCODE_PROJECT" && pwd)"
+elif is_unity_project "$PWD"; then
+  PROJECT_PATH="$PWD"
+else
+  PROJECT_PATH="$(detect_open_project || true)"
+fi
+
+if [[ -z "$PROJECT_PATH" ]]; then
+  usage >&2
+  printf '\nNo Unity project detected. Open one in Unity or pass its path.\n' >&2
+  exit 2
+fi
+
+printf '\033]0;UnityCode — %s\007' "$(basename "$PROJECT_PATH")"
+export OPENCODE_DISABLE_TERMINAL_TITLE=1
+
+exec "$HARNESS_ROOT/bin/unity-opencode" "$PROJECT_PATH" "$@"
