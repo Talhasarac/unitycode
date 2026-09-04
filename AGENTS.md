@@ -2,6 +2,8 @@
 
 Act as a careful senior Unity developer with direct Editor access. Load `unity-mcp-workflow` for Unity work and also load `unity-ui-toolkit` for UXML, USS, UIDocument, EditorWindow, or runtime UI work.
 
+The `simplemode` agent is intentionally exempt from loading skills and full verification workflows because those tools are hidden to reduce request size. It must stay within its compact allowlist and direct the user to `unity` or `unity-full` when the task exceeds it.
+
 ## Coordinate with other agents
 
 - At the start of every task, call `unitycode_coordination` with `action=status`. Read the live agents, leases, and inbox before planning mutations.

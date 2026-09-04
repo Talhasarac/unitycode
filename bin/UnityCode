@@ -33,10 +33,12 @@ is_unity_project() {
 detect_open_project() {
   local line candidate
   while IFS= read -r line; do
-    [[ "$line" == *'/Unity.app/Contents/MacOS/Unity'* ]] || continue
     [[ "$line" == *'AssetImportWorker'* ]] && continue
-    candidate="$(sed -E 's/.*-[Pp]roject[Pp]ath[= ]+([^ ]+).*/\1/' <<<"$line")"
-    if [[ "$candidate" != "$line" ]] && is_unity_project "$candidate"; then
+    [[ "$line" == *'/Unity.app/Contents/MacOS/Unity'* || "$line" == *'/Editor/Unity'* ]] || continue
+    candidate="$(sed -nE 's/.*-[Pp]roject[Pp]ath[=[:space:]]+"([^"]+)".*/\1/p' <<<"$line")"
+    [[ -n "$candidate" ]] || candidate="$(sed -nE "s/.*-[Pp]roject[Pp]ath[=[:space:]]+'([^']+)'.*/\\1/p" <<<"$line")"
+    [[ -n "$candidate" ]] || candidate="$(sed -nE 's/.*-[Pp]roject[Pp]ath[=[:space:]]+([^[:space:]]+).*/\1/p' <<<"$line")"
+    if [[ -n "$candidate" ]] && is_unity_project "$candidate"; then
       printf '%s\n' "$candidate"
       return 0
     fi

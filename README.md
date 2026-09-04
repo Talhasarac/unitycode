@@ -16,8 +16,9 @@ Prompts, selected project context, Unity tool output, and screenshots may be sen
 
 ## Requirements
 
+- macOS or Linux
 - `curl`, Git, and Node.js 18 or newer with npm
-- OpenCode 1.18.4 or newer
+- OpenCode 1.18.4 or newer; the installer installs the current official OpenCode release when it is missing
 - Unity 6 (older supported editors may work)
 - [MCP for Unity](https://github.com/CoplayDev/unity-mcp) installed in the project
 - A running MCP for Unity HTTP server (the launcher discovers its project-local PID file)
@@ -31,7 +32,9 @@ After this repository is public, install or update UnityCode without needing a c
 curl -fsSL https://raw.githubusercontent.com/Talhasarac/unitycode/main/install.sh | bash
 ```
 
-The installer clones the repository into `~/.local/share/unitycode`, installs its pinned npm dependencies, and links `unitycode` into `~/.local/bin`. Review [install.sh](install.sh) before piping it to a shell if you prefer to inspect remote scripts first.
+The installer supports macOS and Linux. It clones the repository into `~/.local/share/unitycode`, installs its pinned npm dependencies, and links `unitycode` into a writable directory already on `PATH` when one is available. If OpenCode is missing, it downloads and runs OpenCode's official installer from `https://opencode.ai/install`. Review [install.sh](install.sh) and the upstream OpenCode installer before piping remote scripts to a shell.
+
+When the selected command directory is already on `PATH`, you can type `unitycode` immediately. Otherwise the installer adds it to your zsh, bash, fish, or POSIX shell configuration and tells you to open a new terminal or run the displayed `source` command. A child install script cannot change the parent terminal's environment directly.
 
 To install manually instead:
 
@@ -43,7 +46,7 @@ mkdir -p ~/.local/bin
 ln -sfn "$PWD/bin/UnityCode" ~/.local/bin/unitycode
 ```
 
-Ensure `~/.local/bin` is on `PATH`, then run `unitycode` while Unity and MCP for Unity are running. UnityCode itself does not require a DeepInfra key.
+Ensure `~/.local/bin` is on `PATH`, then run `unitycode` while Unity and MCP for Unity are running. UnityCode itself does not require a DeepInfra key. Set `UNITYCODE_INSTALL_OPENCODE=0` before installation if you prefer the installer to fail rather than install a missing OpenCode dependency automatically.
 
 ## Optional DeepInfra setup
 
@@ -76,6 +79,8 @@ It detects the Unity project currently open on the machine and launches the bran
 unitycode /path/to/UnityProject
 ```
 
+Open-project detection supports standard Unity Hub processes on macOS and Linux. Running `unitycode` from the Unity project's directory or passing its path explicitly is the most reliable option, especially when the project path contains spaces or Unity was installed in a custom Linux location. Set `UNITY_EDITOR_PATH` when using the CLI helper with a nonstandard Unity installation.
+
 Run a one-shot task:
 
 ```bash
@@ -85,6 +90,7 @@ unitycode /path/to/UnityProject run \
 
 Useful commands inside OpenCode:
 
+- `/simplemode <task>` — use the reduced-token agent for conversation and small C#/prefab tasks
 - `/unity-doctor` — inspect editor, package, MCP, render pipeline, scene, and console health
 - `/unity-screenshot` — capture and critique the current Game/Scene view
 - `/unity-ui` — build or revise a UI Toolkit screen with UXML, USS, C#, and visual checks
@@ -92,6 +98,16 @@ Useful commands inside OpenCode:
 - `/unity-full <task>` — switch to the full-capability agent for generation/import, animation, builds, graphics, packages, physics, ProBuilder, profiling, VFX, or delegated subagents
 
 The default `unity` agent keeps web access but hides the large specialist tool groups above and the `task` subagent tool. Select `unity-full` with the agent picker or use `/unity-full` whenever those capabilities are needed.
+
+Select `simplemode` with the agent picker, use `/simplemode hello`, or launch it directly:
+
+```bash
+unitycode /path/to/UnityProject --agent simplemode
+```
+
+Simple Mode uses a strict allowlist so OpenCode omits most tool schemas from the model request. It keeps local file reading/search/editing, agent coordination, basic C# and prefab operations, console reading, and Unity instance selection. Switch to `unity` or `unity-full` for scenes, components, asset searches, tests, screenshots, shell, web, skills, generation, builds, or profiling.
+
+With OpenCode 1.18.27, a captured `hello` request contained 15 tools and 34,758 bytes total—roughly 8.7k tokens using the common four-characters-per-token estimate. Exact token counts vary by model tokenizer and any additional global instructions installed on the user's machine.
 
 For a one-shot full-capability run from the terminal:
 

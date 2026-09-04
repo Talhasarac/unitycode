@@ -11,6 +11,9 @@ for FILE in \
   "$ROOT/install.sh" \
   "$ROOT/agents/unity.md" \
   "$ROOT/agents/unity-full.md" \
+  "$ROOT/agents/simplemode.md" \
+  "$ROOT/commands/simplemode.md" \
+  "$ROOT/tests/simplemode.mjs" \
   "$ROOT/plugins/unitycode-logo.tsx" \
   "$ROOT/plugins/unitycode-coordinator.ts" \
   "$ROOT/plugins/unitycode-coordination.mjs" \
@@ -27,6 +30,8 @@ bash -n "$ROOT/install.sh"
 bash -n "$ROOT/scripts/doctor.sh"
 node "$ROOT/tests/presence.mjs"
 node "$ROOT/tests/coordination.mjs"
+node "$ROOT/tests/portability.mjs"
+node "$ROOT/tests/simplemode.mjs"
 
 UNITY_MCP_URL="${UNITY_MCP_URL:-http://127.0.0.1:8080/mcp}" \
 OPENCODE_CONFIG="$ROOT/opencode.jsonc" \

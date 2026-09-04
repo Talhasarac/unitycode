@@ -17,11 +17,51 @@ if [[ ! -f "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt" ]]; then
 fi
 
 UNITY_VERSION="$(awk '/m_EditorVersion:/ {print $2; exit}' "$PROJECT_PATH/ProjectSettings/ProjectVersion.txt")"
-UNITY_BIN="${UNITY_EDITOR_PATH:-/Applications/Unity/Hub/Editor/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity}"
+
+find_unity_binary() {
+  if [[ -n "${UNITY_EDITOR_PATH:-}" ]]; then
+    printf '%s\n' "$UNITY_EDITOR_PATH"
+    return
+  fi
+
+  local candidate
+  case "$(uname -s)" in
+    Darwin)
+      printf '/Applications/Unity/Hub/Editor/%s/Unity.app/Contents/MacOS/Unity\n' "$UNITY_VERSION"
+      ;;
+    Linux)
+      for candidate in \
+        "$HOME/Unity/Hub/Editor/$UNITY_VERSION/Editor/Unity" \
+        "$HOME/Unity/Hub/Editor/$UNITY_VERSION/Unity" \
+        "/opt/Unity/Hub/Editor/$UNITY_VERSION/Editor/Unity" \
+        "/usr/local/Unity/Hub/Editor/$UNITY_VERSION/Editor/Unity" \
+        "/opt/unity/Editor/Unity"; do
+        if [[ -x "$candidate" ]]; then
+          printf '%s\n' "$candidate"
+          return
+        fi
+      done
+      printf '%s/Unity/Hub/Editor/%s/Editor/Unity\n' "$HOME" "$UNITY_VERSION"
+      ;;
+    *)
+      printf '%s\n' "Unity"
+      ;;
+  esac
+}
+
+UNITY_BIN="$(find_unity_binary)"
 RUN_DIR="$PROJECT_PATH/.unity-opencode"
 
 is_open() {
-  ps ax -o command= | grep -F '/Unity.app/Contents/MacOS/Unity' | grep -F -- "$PROJECT_PATH" | grep -v -E 'AssetImportWorker|grep -F' >/dev/null 2>&1
+  local line
+  while IFS= read -r line; do
+    [[ "$line" == *'AssetImportWorker'* ]] && continue
+    [[ "$line" == *"$PROJECT_PATH"* ]] || continue
+    if [[ "$line" == *'/Unity.app/Contents/MacOS/Unity'* || "$line" == *'/Editor/Unity'* ]]; then
+      return 0
+    fi
+  done < <(ps ax -o command=)
+  return 1
 }
 
 require_closed() {

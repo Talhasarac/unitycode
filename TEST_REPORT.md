@@ -32,6 +32,8 @@ Tested on 2026-09-04 against:
 - Live one-shot UnityCode launch registered and heartbeated its session under the selected project's `Library/UnityCode/Coordination`; the interrupted process became stale and was removed as designed
 - Atomic `.cs`/`.prefab` claims, exact-path conflicts, compiler/editor lane conflicts, hash-change detection, message delivery, rollback, lease expiry, and fenced stale takeover passed automated tests
 - Concurrent renew/release/takeover scenarios passed 50 repeated stress runs without an old session affecting the replacement lease
+- Simulated Linux validation passed for Unity Hub executable discovery, running-project detection, quoted project paths containing spaces, and launcher handoff
+- Isolated installer validation passed with mocked network commands, a writable active PATH directory, dependency installation, and the final `unitycode` symlink
 
 The captured default request contains 47 tools and approximately 18,120 tokens of tool schemas. All 14 requested specialist/subagent tools are absent, while web access, `unity_docs`, and `unity_reflect` remain present. The captured `unity-full` request restores all 61 tools and approximately 28,894 tokens of tool schemas.
 
@@ -65,6 +67,10 @@ The safe CLI guard correctly prevented a second Editor, while EditMode testing w
 ## Default scene safety
 
 The default and full agents now treat `.unity` scene assets as read-only unless the user's current request explicitly asks for a scene change. Prefab, script, UI-asset, and general project requests do not implicitly authorize creating, saving, overwriting, renaming, moving, deleting, or persisting hierarchy changes to a scene. Read-only inspection, Prefab Mode, and temporary unsaved staging remain available.
+
+## Simple Mode payload
+
+The `simplemode` agent uses a deny-all permission followed by a small explicit allowlist. A captured OpenCode 1.18.27 `hello` request contained 15 tools, 16,670 characters of tool schemas, and 34,758 bytes total. That is approximately 8.7k tokens using a four-characters-per-token estimate; the exact result depends on the selected model tokenizer and user-level global instructions. The resolved-agent regression test confirms that file read/search/edit and coordination remain enabled while shell, web, skills, subagents, and todo tools remain hidden.
 
 ## Multi-agent coordination
 
