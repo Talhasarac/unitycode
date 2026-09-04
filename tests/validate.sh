@@ -12,8 +12,11 @@ for FILE in \
   "$ROOT/agents/unity.md" \
   "$ROOT/agents/unity-full.md" \
   "$ROOT/agents/simplemode.md" \
+  "$ROOT/agents/dumpmode.md" \
   "$ROOT/commands/simplemode.md" \
+  "$ROOT/commands/dumpmode.md" \
   "$ROOT/tests/simplemode.mjs" \
+  "$ROOT/tests/dumpmode.mjs" \
   "$ROOT/plugins/unitycode-logo.tsx" \
   "$ROOT/plugins/unitycode-coordinator.ts" \
   "$ROOT/plugins/unitycode-coordination.mjs" \
@@ -32,6 +35,7 @@ node "$ROOT/tests/presence.mjs"
 node "$ROOT/tests/coordination.mjs"
 node "$ROOT/tests/portability.mjs"
 node "$ROOT/tests/simplemode.mjs"
+node "$ROOT/tests/dumpmode.mjs"
 
 UNITY_MCP_URL="${UNITY_MCP_URL:-http://127.0.0.1:8080/mcp}" \
 OPENCODE_CONFIG="$ROOT/opencode.jsonc" \

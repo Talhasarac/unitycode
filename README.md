@@ -91,6 +91,7 @@ unitycode /path/to/UnityProject run \
 Useful commands inside OpenCode:
 
 - `/simplemode <task>` — use the reduced-token agent for conversation and small C#/prefab tasks
+- `/dumpmode <task>` — use the tiny no-MCP agent for quick questions and attached C# inspection or edits
 - `/unity-doctor` — inspect editor, package, MCP, render pipeline, scene, and console health
 - `/unity-screenshot` — capture and critique the current Game/Scene view
 - `/unity-ui` — build or revise a UI Toolkit screen with UXML, USS, C#, and visual checks
@@ -108,6 +109,10 @@ unitycode /path/to/UnityProject --agent simplemode
 Simple Mode uses a strict allowlist so OpenCode omits most tool schemas from the model request. It keeps local file reading/search/editing, agent coordination, basic C# and prefab operations, console reading, and Unity instance selection. Switch to `unity` or `unity-full` for scenes, components, asset searches, tests, screenshots, shell, web, skills, generation, builds, or profiling.
 
 With OpenCode 1.18.27, a captured `hello` request contained 15 tools and 34,758 bytes total—roughly 8.7k tokens using the common four-characters-per-token estimate. Exact token counts vary by model tokenizer and any additional global instructions installed on the user's machine.
+
+For the smallest prompt, select `dumpmode` or run `/dumpmode hello`. Dump Mode sends no MCP tools and uses a compact system prompt. It can inspect a file attached with `@Assets/file.cs`, search text, and safely modify `.cs` files using coordinated leases; other file types are blocked. A live `hello` test against the local Qwen llama.cpp model used 1,560 input tokens. Switch to `simplemode` or `unity` for broader project work.
+
+New Dump Mode and Simple Mode conversations use the first 10 characters of the initial user message as their title. UnityCode sets that title locally before generation, so OpenCode skips its separate title-model request for these two lean modes.
 
 For a one-shot full-capability run from the terminal:
 

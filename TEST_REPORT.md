@@ -28,6 +28,7 @@ Tested on 2026-09-04 against:
 - TUI `home_logo` slot visibly replaced with the UnityCode logo
 - Default-agent specialist tool hiding verified against the actual outgoing API request
 - `unity-full` agent added to preserve the complete Unity MCP and subagent tool surface
+- `dumpmode` agent verified with a minimal search/C#-editing tool set, no MCP tools, and 1,560 input tokens for a live local-Qwen `hello` request
 - Server coordinator plugin loaded successfully through the real OpenCode 1.18.27 startup path
 - Live one-shot UnityCode launch registered and heartbeated its session under the selected project's `Library/UnityCode/Coordination`; the interrupted process became stale and was removed as designed
 - Atomic `.cs`/`.prefab` claims, exact-path conflicts, compiler/editor lane conflicts, hash-change detection, message delivery, rollback, lease expiry, and fenced stale takeover passed automated tests
@@ -71,6 +72,12 @@ The default and full agents now treat `.unity` scene assets as read-only unless 
 ## Simple Mode payload
 
 The `simplemode` agent uses a deny-all permission followed by a small explicit allowlist. A captured OpenCode 1.18.27 `hello` request contained 15 tools, 16,670 characters of tool schemas, and 34,758 bytes total. That is approximately 8.7k tokens using a four-characters-per-token estimate; the exact result depends on the selected model tokenizer and user-level global instructions. The resolved-agent regression test confirms that file read/search/edit and coordination remain enabled while shell, web, skills, subagents, and todo tools remain hidden.
+
+## Dump Mode payload
+
+The `dumpmode` agent is intended for quick questions and small C# changes. Its outgoing request contains search, edit/write, and coordination tools but no Unity or generic MCP tools. The coordinator replaces the normal project instructions with a compact, single system message and blocks this mode from mutating non-`.cs` paths. A live `hello` request against `qwen3.6-hauhaucs-aggressive` used 1,560 input tokens and 35 output tokens. An isolated request-capture regression test enforces the tool surface and a conservative 6,000-character input ceiling.
+
+The same capture test verifies that both `dumpmode` and `simplemode` send exactly one first-turn model request. Their session titles are assigned locally from the first 10 normalized user-input characters, preventing OpenCode's hidden title agent from making a second request.
 
 ## Multi-agent coordination
 

@@ -17,6 +17,32 @@ import {
 
 const HEARTBEAT_INTERVAL_MS = 5_000
 const COORDINATION_TOOL = "unitycode_coordination"
+const STATIC_TITLE_AGENTS = new Set(["dumpmode", "simplemode"])
+const DEFAULT_SESSION_TITLE = /^(?:New session - |Child session - )\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+
+export function shortConversationTitle(
+  parts: Array<{
+    type?: string
+    text?: string
+    filename?: string
+    synthetic?: boolean
+    source?: { text?: { value?: string }; path?: string }
+  }>,
+) {
+  const text = parts
+    .filter((part) => !part.synthetic)
+    .map((part) => {
+      if (part.type === "text" && typeof part.text === "string") return part.text
+      if (part.type !== "file") return ""
+      return part.source?.text?.value || (part.source?.path ? `@${part.source.path}` : part.filename || "attachment")
+    })
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(?:"([\s\S]*)"|'([\s\S]*)')$/, "$1$2")
+  return Array.from(text).slice(0, 10).join("").trim()
+}
 
 function patchPaths(patchText: unknown) {
   if (typeof patchText !== "string") return []
@@ -92,7 +118,7 @@ function looksLikeProtectedShellMutation(args: Record<string, unknown>) {
   )
 }
 
-const coordinator: Plugin = async ({ directory, worktree }) => {
+const coordinator: Plugin = async ({ client, directory, worktree }) => {
   const projectRoot = worktree && worktree !== "/" ? worktree : directory
   const identities = new Map<string, { sessionID: string; agent: string; status: "active" | "waiting" }>()
   let disposed = false
@@ -215,12 +241,38 @@ const coordinator: Plugin = async ({ directory, worktree }) => {
       }),
     },
 
-    "chat.message": async (input) => {
+    "chat.message": async (input, output) => {
       await remember(input.sessionID, input.agent || "unity", "active")
+      if (!STATIC_TITLE_AGENTS.has(input.agent || "") || !client?.session) return
+
+      const title = shortConversationTitle(output?.parts ?? [])
+      if (!title) return
+      try {
+        const current = await client.session.get({
+          path: { id: input.sessionID },
+          query: { directory: projectRoot },
+        })
+        if (!current.data?.title || !DEFAULT_SESSION_TITLE.test(current.data.title)) return
+        await client.session.update({
+          path: { id: input.sessionID },
+          query: { directory: projectRoot },
+          body: { title },
+        })
+      } catch {
+        // Naming is an optimization; never block the user's actual request.
+      }
     },
 
     "experimental.chat.system.transform": async (input, output) => {
       if (!input.sessionID) return
+      if (identities.get(input.sessionID)?.agent === "dumpmode") {
+        const dumpModePrompt =
+          "You are UnityCode Dump Mode. Answer briefly. You may inspect attached @Assets/file.cs content, " +
+          "search text, and make small C# edits. Claim the exact .cs path with unitycode_coordination before editing " +
+          "and release it afterward. Do not use MCP or change non-C# files."
+        output.system.splice(0, output.system.length, dumpModePrompt)
+        return
+      }
       const snapshot = {
         selfSessionID: input.sessionID,
         agents: await listAgents(projectRoot),
@@ -244,6 +296,13 @@ const coordinator: Plugin = async ({ directory, worktree }) => {
       if (input.tool === COORDINATION_TOOL) return
       await remember(input.sessionID, identities.get(input.sessionID)?.agent || "unity", "active")
       const args = output.args ?? {}
+
+      if (identities.get(input.sessionID)?.agent === "dumpmode" && ["edit", "write", "apply_patch"].includes(input.tool)) {
+        const attemptedPaths = fileMutationPaths(input.tool, args)
+        if (!attemptedPaths.length || attemptedPaths.some((file) => !file.toLowerCase().endsWith(".cs"))) {
+          throw new Error("Dump Mode may only modify .cs files. Switch to simplemode or unity for other changes.")
+        }
+      }
 
       const paths = protectedPaths(fileMutationPaths(input.tool, args))
       if (paths.length) await requireResources(input.sessionID, paths)
