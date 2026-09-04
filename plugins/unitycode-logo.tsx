@@ -7,6 +7,7 @@ import {
   summarizePresence,
   writePresence,
 } from "./unitycode-presence.mjs"
+import { writeLastMode } from "./unitycode-mode-state.mjs"
 
 const HEARTBEAT_INTERVAL_MS = 2_000
 const STALE_AFTER_MS = 10_000
@@ -82,12 +83,16 @@ const tui: TuiPlugin = async (api) => {
   const interval = setInterval(() => void refreshPresence(), HEARTBEAT_INTERVAL_MS)
   const offSessionStatus = api.event.on("session.status", () => void refreshPresence())
   const offSessionIdle = api.event.on("session.idle", () => void refreshPresence())
+  const offAgentSwitch = api.event.on("session.next.agent.switched", (event) => {
+    void writeLastMode(projectRoot, event.properties.agent)
+  })
 
   api.lifecycle.onDispose(async () => {
     disposed = true
     clearInterval(interval)
     offSessionStatus()
     offSessionIdle()
+    offAgentSwitch()
     await removePresence(directory, presenceId)
   })
 }

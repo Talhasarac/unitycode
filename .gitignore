@@ -4,3 +4,4 @@
 .unity-opencode/
 node_modules/
 bun.lock
+/data/

@@ -14,6 +14,7 @@ import {
   updateOwnedHashes,
   verifyResourcesOwned,
 } from "./unitycode-coordination.mjs"
+import { writeLastMode } from "./unitycode-mode-state.mjs"
 
 const HEARTBEAT_INTERVAL_MS = 5_000
 const COORDINATION_TOOL = "unitycode_coordination"
@@ -243,6 +244,7 @@ const coordinator: Plugin = async ({ client, directory, worktree }) => {
 
     "chat.message": async (input, output) => {
       await remember(input.sessionID, input.agent || "unity", "active")
+      await writeLastMode(projectRoot, input.agent || "unity")
       if (!STATIC_TITLE_AGENTS.has(input.agent || "") || !client?.session) return
 
       const title = shortConversationTitle(output?.parts ?? [])

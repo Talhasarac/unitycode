@@ -92,7 +92,12 @@ try {
     ["run", "--agent", "dumpmode", "--model", "probe/probe", "hello"],
     {
       cwd: temporary,
-      env: { ...environment, OPENCODE_CONFIG_CONTENT: JSON.stringify(inlineConfig) },
+      env: {
+        ...environment,
+        NODE_ENV: "test",
+        UNITYCODE_CONTEXT_DB_TEST: path.join(temporary, "context-log.sqlite3"),
+        OPENCODE_CONFIG_CONTENT: JSON.stringify(inlineConfig),
+      },
       stdio: ["ignore", "pipe", "pipe"],
     },
   )
@@ -121,7 +126,12 @@ try {
     ["run", "--agent", "simplemode", "--model", "probe/probe", "abcdefghijk simple title"],
     {
       cwd: temporary,
-      env: { ...environment, OPENCODE_CONFIG_CONTENT: JSON.stringify(inlineConfig) },
+      env: {
+        ...environment,
+        NODE_ENV: "test",
+        UNITYCODE_CONTEXT_DB_TEST: path.join(temporary, "context-log.sqlite3"),
+        OPENCODE_CONFIG_CONTENT: JSON.stringify(inlineConfig),
+      },
       stdio: ["ignore", "pipe", "pipe"],
     },
   )

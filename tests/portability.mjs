@@ -53,6 +53,28 @@ try {
   assert.match(launch, /--agent unity/)
   assert.match(launch, /Project With Spaces/)
 
+  await mkdir(path.join(project, "Library", "UnityCode"), { recursive: true })
+  await writeFile(path.join(project, "Library", "UnityCode", "last-mode"), "dumpmode\n")
+  const restoredMode = run("bin/UnityCode", [], {
+    cwd: outside,
+    env: { UNITY_MCP_URL: "http://127.0.0.1:8080/mcp" },
+  })
+  assert.match(restoredMode, /--agent dumpmode/)
+  assert.doesNotMatch(restoredMode, /--model/)
+
+  const environmentOverride = run("bin/UnityCode", [], {
+    cwd: outside,
+    env: { UNITYCODE_AGENT: "simplemode", UNITY_MCP_URL: "http://127.0.0.1:8080/mcp" },
+  })
+  assert.match(environmentOverride, /--agent simplemode/)
+
+  const explicitMode = run("bin/UnityCode", ["--agent", "unity-full"], {
+    cwd: outside,
+    env: { UNITY_MCP_URL: "http://127.0.0.1:8080/mcp" },
+  })
+  assert.match(explicitMode, /--agent unity-full/)
+  assert.doesNotMatch(explicitMode, /--agent dumpmode/)
+
   const installBin = path.join(temporary, "install-bin")
   const installDirectory = path.join(temporary, "installed", "unitycode")
   await command(

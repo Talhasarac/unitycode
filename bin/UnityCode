@@ -23,7 +23,7 @@ usage() {
   printf '  unitycode /path/to/UnityProject   Open a specific Unity project\n'
   printf '  unitycode run "task"              Run a task against the detected project\n'
   printf '  unitycode /path/to/project run "task"\n\n'
-  printf 'Environment overrides: UNITYCODE_PROJECT, UNITY_MCP_URL, UNITY_OPENCODE_MODEL\n'
+  printf 'Environment overrides: UNITYCODE_PROJECT, UNITYCODE_AGENT, UNITY_MCP_URL, UNITY_OPENCODE_MODEL\n'
 }
 
 is_unity_project() {

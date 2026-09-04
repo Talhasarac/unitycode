@@ -17,10 +17,14 @@ for FILE in \
   "$ROOT/commands/dumpmode.md" \
   "$ROOT/tests/simplemode.mjs" \
   "$ROOT/tests/dumpmode.mjs" \
+  "$ROOT/tests/context-logger.mjs" \
+  "$ROOT/tests/mode-state.mjs" \
   "$ROOT/plugins/unitycode-logo.tsx" \
   "$ROOT/plugins/unitycode-coordinator.ts" \
+  "$ROOT/plugins/unitycode-context-logger.ts" \
   "$ROOT/plugins/unitycode-coordination.mjs" \
   "$ROOT/plugins/unitycode-presence.mjs" \
+  "$ROOT/plugins/unitycode-mode-state.mjs" \
   "$ROOT/skills/unity-mcp-workflow/SKILL.md" \
   "$ROOT/skills/unity-ui-toolkit/SKILL.md"; do
   [[ -s "$FILE" ]] || { echo "missing: $FILE" >&2; exit 1; }
@@ -32,7 +36,9 @@ bash -n "$ROOT/bin/unity-cli"
 bash -n "$ROOT/install.sh"
 bash -n "$ROOT/scripts/doctor.sh"
 node "$ROOT/tests/presence.mjs"
+node "$ROOT/tests/mode-state.mjs"
 node "$ROOT/tests/coordination.mjs"
+node "$ROOT/tests/context-logger.mjs"
 node "$ROOT/tests/portability.mjs"
 node "$ROOT/tests/simplemode.mjs"
 node "$ROOT/tests/dumpmode.mjs"

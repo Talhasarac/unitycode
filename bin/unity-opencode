@@ -62,7 +62,15 @@ done
 
 DEFAULT_ARGS=()
 if [[ "$USE_DEFAULT_AGENT" == true ]]; then
-  DEFAULT_ARGS+=(--agent unity)
+  DEFAULT_AGENT="${UNITYCODE_AGENT:-}"
+  if [[ -z "$DEFAULT_AGENT" && -f "$PROJECT_PATH/Library/UnityCode/last-mode" ]]; then
+    IFS= read -r DEFAULT_AGENT < "$PROJECT_PATH/Library/UnityCode/last-mode" || true
+  fi
+  case "$DEFAULT_AGENT" in
+    unity|unity-full|simplemode|dumpmode|build|plan) ;;
+    *) DEFAULT_AGENT="unity" ;;
+  esac
+  DEFAULT_ARGS+=(--agent "$DEFAULT_AGENT")
 fi
 if [[ "$USE_DEFAULT_MODEL" == true && -n "${UNITY_OPENCODE_MODEL:-}" ]]; then
   DEFAULT_ARGS+=(--model "$UNITY_OPENCODE_MODEL")
@@ -70,5 +78,8 @@ fi
 
 if [[ $# -eq 0 ]]; then
   exec opencode "${DEFAULT_ARGS[@]}" "$PROJECT_PATH"
+fi
+if [[ ${#DEFAULT_ARGS[@]} -eq 0 ]]; then
+  exec opencode "$@"
 fi
 exec opencode "${DEFAULT_ARGS[@]}" "$@"

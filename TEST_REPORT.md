@@ -29,7 +29,9 @@ Tested on 2026-09-04 against:
 - Default-agent specialist tool hiding verified against the actual outgoing API request
 - `unity-full` agent added to preserve the complete Unity MCP and subagent tool surface
 - `dumpmode` agent verified with a minimal search/C#-editing tool set, no MCP tools, and 1,560 input tokens for a live local-Qwen `hello` request
+- Tab-selected UnityCode mode persistence verified independently from model selection; saved, environment-overridden, and explicit-agent launcher paths passed
 - Server coordinator plugin loaded successfully through the real OpenCode 1.18.27 startup path
+- SQLite context logger loaded through the real OpenCode runtime, created a WAL database, and captured outgoing/incoming model and tool events with credential-field redaction
 - Live one-shot UnityCode launch registered and heartbeated its session under the selected project's `Library/UnityCode/Coordination`; the interrupted process became stale and was removed as designed
 - Atomic `.cs`/`.prefab` claims, exact-path conflicts, compiler/editor lane conflicts, hash-change detection, message delivery, rollback, lease expiry, and fenced stale takeover passed automated tests
 - Concurrent renew/release/takeover scenarios passed 50 repeated stress runs without an old session affecting the replacement lease
@@ -84,3 +86,7 @@ The same capture test verifies that both `dumpmode` and `simplemode` send exactl
 The server plugin now registers active sessions, injects a fresh project-local coordination snapshot into each model call, supports direct or broadcast messages, and enforces heartbeat-backed leases before protected OpenCode or Unity MCP mutations. `.cs` claims include the exact asset, C# compiler lane, and Unity Editor write lane; `.prefab` claims include the exact asset and editor lane. A SHA-256 baseline blocks mutation when an owned asset changed externally after the claim.
 
 The edge-case test covers simultaneous claims, partial-claim rollback, crashed-owner expiry, stale takeover, renewal racing takeover, old-owner release racing renewal, and lease-ID fencing. Coordination is deliberately documented as local cooperative protection rather than a cross-machine distributed lock or security boundary.
+
+## Context logging
+
+The shared context logger stores append-only records in UnityCode's own `data/context-log.sqlite3`, never in a Unity project. Each record includes `project_root` so training exports can separate projects. Automated coverage verifies user messages, complete outgoing message and system contexts, model request parameters, tool definitions, MCP calls/results, assistant text/metadata, idle-session snapshots, credential-field redaction, and concurrent writers. The earlier live smoke database passed `PRAGMA integrity_check`; its 66 lifecycle records were copied into UnityCode's private data directory. Its legacy project copy remains only until the older process that still has it open is restarted, after which it can be safely removed.

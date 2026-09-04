@@ -114,6 +114,8 @@ For the smallest prompt, select `dumpmode` or run `/dumpmode hello`. Dump Mode s
 
 New Dump Mode and Simple Mode conversations use the first 10 characters of the initial user message as their title. UnityCode sets that title locally before generation, so OpenCode skips its separate title-model request for these two lean modes.
 
+Tab-switching agents keeps the session's currently selected model. The most recently used primary mode is saved per project under `Library/UnityCode/last-mode` and restored on the next `unitycode` launch. In a session it is recorded on the switch; on the home screen it is recorded when the first prompt is submitted. An explicit `--agent` argument or `UNITYCODE_AGENT` environment variable overrides the saved mode without changing the model.
+
 For a one-shot full-capability run from the terminal:
 
 ```bash
@@ -153,6 +155,12 @@ Every UnityCode session registers itself in the selected project's `Library/Unit
 The coordinator enforces atomic, heartbeat-backed leases for `.cs` and `.prefab` files. Claiming either asset also reserves the shared Unity Editor write lane; C# changes reserve the compiler lane too. OpenCode file edits and Unity MCP mutations are rejected when the session lacks the required lease, when another live agent owns it, or when the asset changed after it was claimed. A crashed session's leases expire after 30 seconds, and a unique lease ID prevents the old process from releasing or renewing a replacement lease.
 
 This coordination is local to one machine and project. It protects cooperating UnityCode sessions; it is not a distributed lock for teammates on other computers, and external programs can still modify files. Keep the project under version control and review diffs before committing.
+
+## Context logging
+
+UnityCode records training-oriented context events in `data/context-log.sqlite3` inside the UnityCode installation itself—not inside any Unity project. Every project and UnityCode terminal writes to this shared database. SQLite WAL mode and a busy timeout allow concurrent appends, while the `project_root` column keeps projects distinguishable. The `context_events` table also stores timestamps, session/message/call IDs, direction, model/provider metadata, complete system and message contexts, assistant responses, request parameters, tool/MCP definitions, calls, results, and completed session snapshots.
+
+The database can contain prompts, attached code, model reasoning, and tool output, so treat it as sensitive local data. UnityCode's `/data/` directory is gitignored and must not be committed. Authentication headers are never captured, and credential-shaped JSON fields such as API keys, passwords, cookies, secrets, and access tokens are replaced with `[REDACTED]`. Plain text pasted into prompts or source files is otherwise stored exactly for training use.
 
 ## Configuration notes
 
