@@ -28,6 +28,10 @@ Tested on 2026-09-04 against:
 - TUI `home_logo` slot visibly replaced with the UnityCode logo
 - Default-agent specialist tool hiding verified against the actual outgoing API request
 - `unity-full` agent added to preserve the complete Unity MCP and subagent tool surface
+- Server coordinator plugin loaded successfully through the real OpenCode 1.18.27 startup path
+- Live one-shot UnityCode launch registered and heartbeated its session under the selected project's `Library/UnityCode/Coordination`; the interrupted process became stale and was removed as designed
+- Atomic `.cs`/`.prefab` claims, exact-path conflicts, compiler/editor lane conflicts, hash-change detection, message delivery, rollback, lease expiry, and fenced stale takeover passed automated tests
+- Concurrent renew/release/takeover scenarios passed 50 repeated stress runs without an old session affecting the replacement lease
 
 The captured default request contains 47 tools and approximately 18,120 tokens of tool schemas. All 14 requested specialist/subagent tools are absent, while web access, `unity_docs`, and `unity_reflect` remain present. The captured `unity-full` request restores all 61 tools and approximately 28,894 tokens of tool schemas.
 
@@ -61,3 +65,9 @@ The safe CLI guard correctly prevented a second Editor, while EditMode testing w
 ## Default scene safety
 
 The default and full agents now treat `.unity` scene assets as read-only unless the user's current request explicitly asks for a scene change. Prefab, script, UI-asset, and general project requests do not implicitly authorize creating, saving, overwriting, renaming, moving, deleting, or persisting hierarchy changes to a scene. Read-only inspection, Prefab Mode, and temporary unsaved staging remain available.
+
+## Multi-agent coordination
+
+The server plugin now registers active sessions, injects a fresh project-local coordination snapshot into each model call, supports direct or broadcast messages, and enforces heartbeat-backed leases before protected OpenCode or Unity MCP mutations. `.cs` claims include the exact asset, C# compiler lane, and Unity Editor write lane; `.prefab` claims include the exact asset and editor lane. A SHA-256 baseline blocks mutation when an owned asset changed externally after the claim.
+
+The edge-case test covers simultaneous claims, partial-claim rollback, crashed-owner expiry, stale takeover, renewal racing takeover, old-owner release racing renewal, and lease-ID fencing. Coordination is deliberately documented as local cooperative protection rather than a cross-machine distributed lock or security boundary.

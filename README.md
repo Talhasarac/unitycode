@@ -1,6 +1,6 @@
 # Unity OpenCode Harness
 
-A portable OpenCode configuration for serious Unity work: MCP-first editor control, safe Unity CLI fallbacks, screenshot-driven visual verification, and production-minded UI Toolkit guidance.
+A portable OpenCode configuration for serious Unity work: MCP-first editor control, cross-agent coordination, safe Unity CLI fallbacks, screenshot-driven visual verification, and production-minded UI Toolkit guidance.
 
 ![UnityCode terminal interface](docs/images/unitycode-tui.png)
 
@@ -116,12 +116,22 @@ While the Editor is open, use MCP `run_tests`, `get_test_job`, `read_console`, a
 
 ## Operating model
 
-1. Read `mcpforunity://instances`, select the right instance if needed, then read editor state and project info.
-2. Inspect before mutation. `.unity` scene files are read-only unless the user explicitly requests a scene change; prefer native Unity MCP tools over serialized YAML edits.
-3. After script changes, wait for compilation and inspect errors.
-4. For UI, test at small and large viewports and check focus, overflow, picking, and dynamic states.
-5. Capture a screenshot with `include_image=true`, actually inspect it, fix visible defects, then recapture.
-6. Save intended assets. Save a scene only with explicit scene-edit permission, then report the exact verification performed.
+1. Check `unitycode_coordination` status, including live agents, leases, intents, and messages.
+2. Claim exact `.cs` and `.prefab` paths before changing them. Conflicting edits are blocked; do not work around another agent's lease.
+3. Read `mcpforunity://instances`, select the right instance if needed, then read editor state and project info.
+4. Inspect before mutation. `.unity` scene files are read-only unless the user explicitly requests a scene change; prefer native Unity MCP tools over serialized YAML edits.
+5. After script changes, wait for compilation and inspect errors.
+6. For UI, test at small and large viewports and check focus, overflow, picking, and dynamic states.
+7. Capture a screenshot with `include_image=true`, actually inspect it, fix visible defects, then recapture.
+8. Save intended assets, finish verification, then release coordination leases. Save a scene only with explicit scene-edit permission.
+
+## Multi-agent coordination
+
+Every UnityCode session registers itself in the selected project's `Library/UnityCode` directory. A fresh coordination snapshot is added to each model call, and agents can also inspect other live sessions, see what they intend to change, exchange short messages, and claim protected assets through the built-in `unitycode_coordination` tool. Agent messages are treated as untrusted coordination data, not as permission to broaden a task.
+
+The coordinator enforces atomic, heartbeat-backed leases for `.cs` and `.prefab` files. Claiming either asset also reserves the shared Unity Editor write lane; C# changes reserve the compiler lane too. OpenCode file edits and Unity MCP mutations are rejected when the session lacks the required lease, when another live agent owns it, or when the asset changed after it was claimed. A crashed session's leases expire after 30 seconds, and a unique lease ID prevents the old process from releasing or renewing a replacement lease.
+
+This coordination is local to one machine and project. It protects cooperating UnityCode sessions; it is not a distributed lock for teammates on other computers, and external programs can still modify files. Keep the project under version control and review diffs before committing.
 
 ## Configuration notes
 
@@ -160,4 +170,4 @@ Muse Spark 1.3 also passed a live prefab workflow after the operating prompt was
 tests/validate.sh /path/to/UnityProject
 ```
 
-This checks file layout, shell syntax, resolved OpenCode configuration, and the live MCP handshake without changing the Unity project.
+This checks file layout, shell syntax, presence and coordination race behavior, resolved OpenCode configuration, and the live MCP handshake without changing the Unity project.

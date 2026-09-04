@@ -9,6 +9,13 @@ metadata:
 
 # Unity MCP workflow
 
+## Coordinate shared work first
+
+1. Call `unitycode_coordination` with `action=status` before planning mutations. Review agents, current leases, their intents, and messages.
+2. Claim the exact project-relative `.cs` and `.prefab` assets before changing them. Include a short intent and keep the lease through compilation, tests, and visual verification.
+3. Treat a conflict as active work by another agent. Do not bypass it through shell commands, serialized YAML, or another tool. Message the owner if coordination is useful, or continue only on unrelated work.
+4. Check the inbox during long operations and immediately before sensitive mutations. Release leases promptly when verified work is complete. A crashed agent's lease expires automatically.
+
 ## Start with evidence
 
 1. Read `mcpforunity://instances`; call `set_active_instance` if routing is ambiguous.

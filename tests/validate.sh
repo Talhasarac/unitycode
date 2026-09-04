@@ -12,6 +12,8 @@ for FILE in \
   "$ROOT/agents/unity.md" \
   "$ROOT/agents/unity-full.md" \
   "$ROOT/plugins/unitycode-logo.tsx" \
+  "$ROOT/plugins/unitycode-coordinator.ts" \
+  "$ROOT/plugins/unitycode-coordination.mjs" \
   "$ROOT/plugins/unitycode-presence.mjs" \
   "$ROOT/skills/unity-mcp-workflow/SKILL.md" \
   "$ROOT/skills/unity-ui-toolkit/SKILL.md"; do
@@ -24,6 +26,7 @@ bash -n "$ROOT/bin/unity-cli"
 bash -n "$ROOT/install.sh"
 bash -n "$ROOT/scripts/doctor.sh"
 node "$ROOT/tests/presence.mjs"
+node "$ROOT/tests/coordination.mjs"
 
 UNITY_MCP_URL="${UNITY_MCP_URL:-http://127.0.0.1:8080/mcp}" \
 OPENCODE_CONFIG="$ROOT/opencode.jsonc" \
